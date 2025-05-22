@@ -1,22 +1,45 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains import RetrievalQA
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
 from app.vector_store.qdrant_store import get_qdrant_vectorstore
-from app.core.config import GOOGLE_API_KEY
 
-def query_with_context(user_query):
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-001",
-        google_api_key=GOOGLE_API_KEY,
-        temperature=0.4
+load_dotenv()
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+print(API_KEY)
+client = OpenAI(
+    api_key=API_KEY,
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
+
+
+def query_with_context(user_query: str) -> dict:
+    # Step 1: Retrieve similar documents from Qdrant
+    vectorstore = get_qdrant_vectorstore()
+    retriever = vectorstore.as_retriever(search_type="similarity", k=4)
+    docs = retriever.get_relevant_documents(user_query)
+
+    # Step 2: Build context from docs
+    context = "\n\n".join([doc.page_content for doc in docs])
+
+    # Step 3: Format prompt
+    system_prompt = "You are an AI assistant using Gemini Flash. Use the provided context to answer the question accurately."
+
+    messages = [
+        { "role": "system", "content": system_prompt },
+        { "role": "user", "content": f"Context:\n{context}\n\nQuestion: {user_query}" }
+    ]
+
+    # Step 4: Call Gemini Flash 2.0 using OpenAI-style interface
+    response = client.chat.completions.create(
+        model="gemini-2.0-flash",
+        response_format={"type": "text"},  # or "json_object" if needed
+        messages=messages
     )
 
-    retriever = get_qdrant_vectorstore().as_retriever(search_type="similarity", k=5)
+    answer = response.choices[0].message.content
 
-    qa_chain = RetrievalQA.from_chain_type(
-        llm=llm,
-        retriever=retriever,
-        return_source_documents=True
-    )
-
-    result = qa_chain.invoke(user_query)
-    return result
+    return {
+        "answer": answer,
+        "source_docs": [doc.metadata for doc in docs]
+    }

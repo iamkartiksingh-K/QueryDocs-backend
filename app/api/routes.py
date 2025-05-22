@@ -1,15 +1,25 @@
 from fastapi import APIRouter, UploadFile, File
 from app.services.ingest import ingest_pdf
 from app.services.query import query_with_context
+from pathlib import Path
+import os
 
 router = APIRouter()
 
+
 @router.post("/upload/")
 async def upload_pdf(file: UploadFile = File(...)):
-    file_path = f"./temp/{file.filename}"
+    temp_dir = Path("./temp").resolve()
+    temp_dir.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+
+    file_path = f"{temp_dir}/{file.filename}"
     with open(file_path, "wb") as f:
         f.write(await file.read())
-    return {"msg": ingest_pdf(file_path)}
+
+    # Convert to string with forward slashes (POSIX-style) for PyPDFLoader
+    return {"msg": ingest_pdf(Path(file_path).as_posix())}
+
+
 
 @router.get("/ask/")
 def ask_question(query: str):
