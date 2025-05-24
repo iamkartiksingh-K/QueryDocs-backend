@@ -2,7 +2,6 @@ from fastapi import APIRouter, UploadFile, File
 from app.services.ingest import ingest_pdf
 from app.services.query import query_with_context
 from pathlib import Path
-import os
 
 router = APIRouter()
 
