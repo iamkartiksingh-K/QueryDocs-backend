@@ -32,6 +32,7 @@ coloredlogs==15.0.1
 comm==0.2.2
 confection==0.1.5
 ConfigArgParse==1.7
+cryptography==45.0.2
 cymem==2.0.11
 dataclasses-json==0.6.7
 debugpy==1.8.12
@@ -43,6 +44,7 @@ dnspython==2.7.0
 docstring_parser==0.16
 dotenv==0.9.9
 durationpy==0.9
+ecdsa==0.19.1
 elastic-transport==8.17.1
 elasticsearch==8.17.2
 email_validator==2.2.0
@@ -181,6 +183,7 @@ packaging==24.2
 pandas==2.2.3
 pandocfilters==1.5.1
 parso==0.8.4
+passlib==1.7.4
 platformdirs==4.3.6
 portalocker==2.10.1
 posthog==4.0.1
@@ -192,7 +195,7 @@ proto-plus==1.26.0
 protobuf==3.20.3
 psutil==7.0.0
 pure_eval==0.2.3
-pyasn1==0.6.1
+pyasn1==0.4.8
 pyasn1_modules==0.4.1
 pycparser==2.22
 pydantic==2.10.6
@@ -207,6 +210,7 @@ pyreadline3==3.5.4
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
+python-jose==3.4.0
 python-json-logger==3.2.1
 python-multipart==0.0.20
 pytz==2025.1
