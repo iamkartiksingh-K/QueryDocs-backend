@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File
 from app.services.ingest import ingest_pdf
 from app.services.query import query_with_context
+from app.services.cloudinary_service import get_cloudinary_signature
 from pathlib import Path
 
 router = APIRouter()
@@ -24,3 +25,9 @@ async def upload_pdf(file: UploadFile = File(...)):
 def ask_question(query: str):
     result = query_with_context(query)
     return result
+
+
+@router.get("/get-signature")
+def get_signature():
+    return get_cloudinary_signature()
+
