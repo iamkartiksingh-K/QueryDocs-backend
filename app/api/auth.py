@@ -39,7 +39,7 @@ def profile(request: Request, db: Session = Depends(get_db)):
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    email = payload.get("sub")
+    email = payload.get("email")
     if not email:
         raise HTTPException(status_code=401, detail="Invalid token payload")
 
