@@ -2,7 +2,9 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from pathlib import Path
 import shutil
 import os
-
+import requests
+from app.models.user import User
+from app.schemas.user import UserOut
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.ingest import ingest_pdf
@@ -68,3 +70,46 @@ def ask_question(query: str):
 @router.get("/get-signature")
 def get_signature():
     return get_cloudinary_signature()
+
+@router.get("/load_document")
+def load_user_documents_and_ingest(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    user_docs = db.query(Document).filter(Document.user_id == current_user.id).all()
+
+    if not user_docs:
+        raise HTTPException(status_code=404, detail="No documents found for this user.")
+
+    temp_dir = Path("./temp").resolve()
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    for doc in user_docs:
+        file_name = doc.name
+        file_url = doc.url
+        temp_path = temp_dir / file_name
+
+        # Download the PDF from Cloudinary
+        response = requests.get(file_url)
+        if response.status_code != 200:
+            continue  # optionally log or raise for failures
+
+        with open(temp_path, "wb") as f:
+            f.write(response.content)
+
+        # Ingest into vector DB
+        try:
+            ingest_pdf(temp_path.as_posix())
+        except Exception as e:
+            print(f"Ingestion failed for {file_name}: {e}")
+            continue
+
+    # Clean up all temp files
+    try:
+        for file in temp_dir.iterdir():
+            file.unlink()
+        temp_dir.rmdir()
+    except Exception as e:
+        print(f"Cleanup failed: {e}")
+
+    return {"msg": f"Ingested {len(user_docs)} document(s) successfully."}
