@@ -6,7 +6,6 @@ from app.vector_store.qdrant_store import get_qdrant_vectorstore
 load_dotenv()
 
 API_KEY = os.getenv("GEMINI_API_KEY")
-print(API_KEY)
 client = OpenAI(
     api_key=API_KEY,
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
