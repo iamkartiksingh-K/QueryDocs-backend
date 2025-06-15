@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from app.vector_store.qdrant_store import get_qdrant_vectorstore
 from qdrant_client.models import Filter, FieldCondition, MatchValue
-from uuid import UUID
 
 load_dotenv()
 

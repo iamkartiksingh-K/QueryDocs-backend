@@ -52,3 +52,11 @@ def get_qdrant_vectorstore():
         collection_name=COLLECTION_NAME,
         embeddings=embeddings
     )
+
+def get_qdrant_client():
+    return QdrantClient(
+        url=QDRANT_URL,
+        api_key=QDRANT_API_KEY,
+        timeout=30
+    )
+

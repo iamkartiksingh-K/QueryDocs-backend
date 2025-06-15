@@ -38,3 +38,7 @@ def upload_pdf_to_cloudinary(file_path: str) -> str:
         folder="pdfs"
     )
     return result.get("secure_url")
+
+def delete_pdf_from_cloudinary(file_url: str):
+    public_id = file_url.split("/")[-1].split(".")[0]  # crude but safe for now
+    cloudinary.uploader.destroy(f"pdfs/{public_id}", resource_type="raw")
