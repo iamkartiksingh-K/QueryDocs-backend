@@ -1,0 +1,35 @@
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./app/data:/app/data   # ✅ add this line
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A celery_worker.celery_app worker --loglevel=info
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+      - ./app/data:/app/data   # ✅ add this line too
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP=True
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"

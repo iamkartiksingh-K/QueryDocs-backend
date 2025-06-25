@@ -13,8 +13,8 @@ def ingest_pdf(file_path: str, user_id: str, document_id: str):
         }
         print(f"✅ Chunk {i+1} metadata:", chunk.metadata)
         
-    for i, chunk in enumerate(chunks):
-        print(f"Chunk {i+1} Preview:\n", chunk.page_content[:300], "\n---")
+    # for i, chunk in enumerate(chunks):
+        # print(f"Chunk {i+1} Preview:\n", chunk.page_content[:300], "\n---")
 
 
     vectorstore = get_qdrant_vectorstore()
