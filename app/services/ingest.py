@@ -1,7 +1,20 @@
 from app.utils.pdf_loader import load_and_split_pdf
 from app.vector_store.qdrant_store import get_qdrant_vectorstore
-from pprint import pprint
-from langchain_core.documents import Document  # if not already
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from app.core.config import QDRANT_BATCH_SIZE
+
+def batch(iterable, batch_size):
+    """Yield successive batches of specified size."""
+    for i in range(0, len(iterable), batch_size):
+        yield iterable[i:i + batch_size]
+
+def insert_batch(batch, vectorstore):
+    try:
+        vectorstore.add_documents(batch)
+        print(f"✅ Inserted batch of {len(batch)} chunks")
+    except Exception as e:
+        print("❌ Batch insert failed:", e)
+
 
 def ingest_pdf(file_path: str, user_id: str, document_id: str):
     chunks = load_and_split_pdf(file_path)
@@ -19,17 +32,22 @@ def ingest_pdf(file_path: str, user_id: str, document_id: str):
 
     vectorstore = get_qdrant_vectorstore()
 
+    print("📥 Adding documents to Qdrant vectorstore...")
+    batches = list(batch(chunks, QDRANT_BATCH_SIZE))
+
     try:
-        print("📥 Adding documents to Qdrant vectorstore...")
-        vectorstore.add_documents(chunks)
-        print("✅ Successfully added to vectorstore.")
+        with ThreadPoolExecutor(max_workers=4) as executor:  # You can tune workers
+            futures = [executor.submit(insert_batch, b, vectorstore) for b in batches]
+            for future in as_completed(futures):
+                future.result()  # Raise if any exception occurred
+
+        print("✅ Successfully added all batches to vectorstore.")
     except Exception as e:
-        print("❌ Failed to add documents to Qdrant:", e)
+        print("❌ Failed during parallel batch insert:", e)
         import traceback; traceback.print_exc()
         raise e
 
     return f"Ingested {len(chunks)} chunks."
-
 
 
 
